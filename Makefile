@@ -17,7 +17,7 @@ ADMIN_LASTNAME   ?= User
 
 APP = docker compose exec --user www-data app
 
-.PHONY: up down build logs sh magento composer install setup sample-data clean
+.PHONY: up down build logs sh magento composer install setup clean
 
 up:
 	docker compose up -d
@@ -65,15 +65,10 @@ setup:
 		--use-rewrites=1 \
 		--search-engine=opensearch \
 		--opensearch-host=opensearch \
-		--opensearch-port=9200
+		--opensearch-port=9200 \
+		--use-sample-data
 	$(APP) bin/magento module:disable Magento_TwoFactorAuth Magento_AdminAdobeImsTwoFactorAuth
 	$(APP) bin/magento deploy:mode:set developer
-	$(APP) bin/magento indexer:reindex
-	$(APP) bin/magento cache:flush
-
-sample-data:
-	$(APP) bin/magento sampledata:deploy
-	$(APP) bin/magento setup:upgrade
 	$(APP) bin/magento indexer:reindex
 	$(APP) bin/magento cache:flush
 

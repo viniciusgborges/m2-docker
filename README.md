@@ -1,7 +1,7 @@
 # m2-docker
 
-Projeto Magento 2 Open Source (tema Luma) com ambiente Docker para
-desenvolvimento.
+Projeto Magento 2 Open Source com tema Luma e dados de exemplo, com ambiente
+Docker para desenvolvimento.
 
 ## Serviços
 
@@ -91,12 +91,6 @@ Se o resultado não for `1000` e `1000`, ajuste `HOST_UID` e `HOST_GID` no
 
    - Loja: http://localhost/
    - Admin: http://localhost/admin (usuário `admin`, senha `Admin123!`)
-
-Opcional: instale os dados de exemplo do tema Luma:
-
-```bash
-make sample-data
-```
 
 ## Comandos
 
