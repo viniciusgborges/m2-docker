@@ -1,6 +1,7 @@
 # m2-docker
 
-Docker para rodar o Magento 2 Open Source (tema Luma) em desenvolvimento.
+Projeto Magento 2 Open Source (tema Luma) com ambiente Docker para
+desenvolvimento.
 
 ## Serviços
 
@@ -11,58 +12,43 @@ Docker para rodar o Magento 2 Open Source (tema Luma) em desenvolvimento.
 | db | mariadb:${MARIADB_VERSION} | 127.0.0.1:3307 |
 | opensearch | opensearchproject/opensearch:${OPENSEARCH_VERSION} | |
 
-Os defaults seguem os [requisitos de sistema](https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements)
-do Magento 2.4.8-p5. Para outra versão do Magento, ajuste `MAGENTO_VERSION`
-e as versões dos serviços no `.env` conforme a mesma página e rode
-`make build`.
+A versão do Magento é definida no `composer.json`. As versões dos serviços
+seguem os [requisitos de sistema](https://experienceleague.adobe.com/en/docs/commerce-operations/installation-guide/system-requirements)
+da versão instalada e podem ser ajustadas no `.env`.
 
-## Preparando um PC novo
+## Pré-requisitos
 
-Siga estes passos uma única vez em cada máquina.
+Execute estes passos uma vez por máquina.
 
-### 1. Instale o Docker
+### Docker
 
-Instale o Docker Engine e o Docker Compose seguindo a
+Instale o Docker Engine e o Docker Compose conforme a
 [documentação oficial](https://docs.docker.com/engine/install/). No Linux,
-faça também os [passos pós-instalação](https://docs.docker.com/engine/install/linux-postinstall/)
-para rodar o Docker sem `sudo`.
+execute também os [passos pós-instalação](https://docs.docker.com/engine/install/linux-postinstall/)
+para usar o Docker sem `sudo`.
 
-Confirme que funcionou:
+Verifique a instalação:
 
 ```bash
 docker compose version
 ```
 
-### 2. Gere as chaves do Magento
+### Chaves de acesso do Composer
 
-O Composer precisa de chaves para baixar o Magento do repositório da Adobe.
+O download do Magento pelo Composer exige chaves de acesso do repositório da
+Adobe.
 
 1. Acesse o [Commerce Marketplace](https://commercemarketplace.adobe.com/)
    e faça login. Se não tiver conta, crie uma.
-2. Clique no seu nome no canto superior direito e escolha **My Profile**.
+2. Clique no seu nome no canto superior direito e selecione **My Profile**.
 3. Na aba **Marketplace**, clique em **Access Keys**.
-4. Clique em **Create a New Access Key**, dê um nome e confirme.
+4. Clique em **Create a New Access Key**, informe um nome e confirme.
 5. Guarde a **Public key** e a **Private key**.
 
-### 3. Crie o arquivo de autenticação
+### Usuário do sistema
 
-Crie o arquivo `~/.composer/auth.json` com as chaves. A chave pública é o
-usuário e a chave privada é a senha:
-
-```json
-{
-    "http-basic": {
-        "repo.magento.com": {
-            "username": "SUA_PUBLIC_KEY",
-            "password": "SUA_PRIVATE_KEY"
-        }
-    }
-}
-```
-
-### 4. Confira seu usuário
-
-Os arquivos do Magento ficam com o dono do seu usuário no PC. Veja seu id:
+Os arquivos gerados pelos containers pertencem ao usuário do host. Verifique
+o UID e o GID do seu usuário:
 
 ```bash
 id -u && id -g
@@ -71,90 +57,101 @@ id -u && id -g
 Se o resultado não for `1000` e `1000`, ajuste `HOST_UID` e `HOST_GID` no
 `.env` (veja [Configuração](#configuração)).
 
-## Instalando a loja
+## Instalação
 
-1. Clone o projeto e entre na pasta:
+1. Clone o repositório e acesse o diretório:
 
    ```bash
    git clone git@github.com:viniciusgborges/m2-docker.git
    cd m2-docker
    ```
 
-2. Copie o arquivo de configuração e ajuste o que precisar:
+2. Crie o arquivo de autenticação do Composer e preencha com as chaves de
+   acesso. A chave pública é o usuário e a chave privada é a senha:
+
+   ```bash
+   cp auth.json.sample auth.json
+   ```
+
+3. Crie o arquivo de configuração a partir do exemplo e ajuste conforme
+   necessário:
 
    ```bash
    cp .env.example .env
    ```
 
-3. Rode a instalação. Na primeira vez leva alguns minutos, pois baixa as
-   imagens e todos os pacotes do Magento:
+4. Execute a instalação. A primeira execução leva alguns minutos para baixar
+   as imagens e as dependências do Composer:
 
    ```bash
    make install
    ```
 
-4. Acesse a loja e o admin:
+5. Acesse a loja e o admin:
 
    - Loja: http://localhost/
    - Admin: http://localhost/admin (usuário `admin`, senha `Admin123!`)
 
-Opcional: para ter produtos e categorias de exemplo do tema Luma, rode:
+Opcional: instale os dados de exemplo do tema Luma:
 
 ```bash
 make sample-data
 ```
 
-## Dia a dia
+## Comandos
 
 ```bash
-make up                          # sobe os containers
+make up                          # inicia os containers
 make down                        # para os containers
-make logs                        # logs de todos os serviços
-make sh                          # shell no container php
-make magento cmd="cache:flush"   # roda bin/magento
-make clean                       # remove containers, volumes e src/
+make logs                        # exibe os logs de todos os serviços
+make sh                          # abre um shell no container php
+make magento cmd="cache:flush"   # executa bin/magento
+make composer cmd="update"       # executa composer
+make clean                       # remove containers, volumes, vendor/ e arquivos gerados
 ```
 
 ## Configuração
 
 Todas as variáveis ficam no `.env`, criado a partir do `.env.example`. O
-`.env` não vai para o git. Sem ele, o projeto usa os mesmos valores do
+`.env` é ignorado pelo git. Sem ele, o projeto usa os mesmos valores do
 `.env.example`.
 
 | Grupo | Variáveis |
 |---|---|
 | Portas | `HTTP_PORT`, `DB_PORT` |
 | Usuário | `HOST_UID`, `HOST_GID` |
-| Versões | `MAGENTO_VERSION`, `PHP_VERSION`, `MARIADB_VERSION`, `OPENSEARCH_VERSION`, `NGINX_VERSION` |
+| Versões | `PHP_VERSION`, `MARIADB_VERSION`, `OPENSEARCH_VERSION`, `NGINX_VERSION` |
 | Loja | `BASE_URL`, `MAGENTO_LANGUAGE`, `MAGENTO_CURRENCY`, `MAGENTO_TIMEZONE` |
 | Banco | `DB_NAME`, `DB_USER`, `DB_PASSWORD`, `DB_ROOT_PASSWORD` |
 | Admin | `ADMIN_FRONTNAME`, `ADMIN_USER`, `ADMIN_PASSWORD`, `ADMIN_EMAIL`, `ADMIN_FIRSTNAME`, `ADMIN_LASTNAME` |
 
-Se mudar `HOST_UID`, `HOST_GID` ou `PHP_VERSION`, rode `make build` para
-reconstruir a imagem.
+Após alterar `HOST_UID`, `HOST_GID` ou `PHP_VERSION`, execute `make build`
+para reconstruir a imagem.
 
-## Problemas comuns
+## Solução de problemas
 
-**A porta 80 já está em uso.** Outro programa usa a porta. Defina outra no
-`.env`, por exemplo `HTTP_PORT=8080` e `BASE_URL=http://localhost:8080/`, e
-rode `make clean` e `make install` de novo.
+**Porta 80 em uso.** Defina outra porta no `.env`, por exemplo
+`HTTP_PORT=8080` e `BASE_URL=http://localhost:8080/`, e execute `make clean`
+e `make install`.
 
-**O Composer pede usuário e senha.** O arquivo `~/.composer/auth.json` não
-existe ou as chaves estão erradas. Refaça o passo
-[Crie o arquivo de autenticação](#3-crie-o-arquivo-de-autenticação).
+**Composer solicita usuário e senha.** O arquivo `auth.json` na raiz do
+projeto não existe ou contém chaves inválidas. Repita o passo 2 de
+[Instalação](#instalação).
 
-**Erro de permissão em `src/`.** Os arquivos ficaram com outro dono. Confira
-seu id no passo [Confira seu usuário](#4-confira-seu-usuário), ajuste o
-`.env` e rode `make build`.
+**Erro de permissão em `src/`.** `HOST_UID` e `HOST_GID` não correspondem ao
+usuário do host. Verifique os valores conforme
+[Usuário do sistema](#usuário-do-sistema), ajuste o `.env` e execute
+`make build`.
 
-**O OpenSearch reinicia sem parar.** Falta memória virtual para ele. No
-Linux, rode:
+**OpenSearch reinicia continuamente.** O limite de memória virtual do kernel
+é insuficiente. No Linux, execute:
 
 ```bash
 sudo sysctl -w vm.max_map_count=262144
 ```
 
-**Quero começar do zero.** Apague tudo e instale de novo:
+**Reinstalação completa.** Remove containers, volumes, dependências e
+arquivos gerados, e instala novamente:
 
 ```bash
 make clean
@@ -169,7 +166,11 @@ make install
   php/Dockerfile       php-fpm com as extensões exigidas pelo Magento e Composer
   php/php.ini          overrides de php.ini
 .env.example           variáveis de configuração
+auth.json.sample       modelo das chaves de acesso do Composer
 docker-compose.yml
 Makefile
-src/                   código do Magento (gitignored)
+app/, bin/, pub/, ...  projeto Magento
 ```
+
+`vendor/`, `generated/`, `var/`, `pub/static/`, `pub/media/`,
+`app/etc/env.php`, `auth.json` e `.env` são ignorados pelo git.
