@@ -1,27 +1,25 @@
 -include .env
 export
 
-MAGENTO_VERSION ?= 2.4.8-p5
-BASE_URL        ?= http://localhost/
+BASE_URL         ?= http://localhost/
 MAGENTO_LANGUAGE ?= pt_BR
 MAGENTO_CURRENCY ?= BRL
 MAGENTO_TIMEZONE ?= America/Sao_Paulo
-DB_NAME         ?= magento
-DB_USER         ?= magento
-DB_PASSWORD     ?= magento
-ADMIN_FRONTNAME ?= admin
-ADMIN_USER      ?= admin
-ADMIN_PASSWORD  ?= Admin123!
-ADMIN_EMAIL     ?= admin@example.com
-ADMIN_FIRSTNAME ?= Admin
-ADMIN_LASTNAME  ?= User
+DB_NAME          ?= magento
+DB_USER          ?= magento
+DB_PASSWORD      ?= magento
+ADMIN_FRONTNAME  ?= admin
+ADMIN_USER       ?= admin
+ADMIN_PASSWORD   ?= Admin123!
+ADMIN_EMAIL      ?= admin@example.com
+ADMIN_FIRSTNAME  ?= Admin
+ADMIN_LASTNAME   ?= User
 
 APP = docker compose exec --user www-data app
 
-.PHONY: up down build logs sh magento install setup sample-data clean
+.PHONY: up down build logs sh magento composer install setup sample-data clean
 
 up:
-	@mkdir -p src
 	docker compose up -d
 
 down:
@@ -39,12 +37,12 @@ sh:
 magento:
 	$(APP) bin/magento $(cmd)
 
+composer:
+	$(APP) composer $(cmd)
+
 install: build
-	@mkdir -p src
 	docker compose up -d app
-	$(APP) composer create-project --no-interaction \
-		--repository-url=https://repo.magento.com/ \
-		magento/project-community-edition=$(MAGENTO_VERSION) .
+	$(APP) composer install --no-interaction
 	$(MAKE) setup
 	docker compose up -d
 
@@ -81,4 +79,4 @@ sample-data:
 
 clean:
 	docker compose down -v
-	rm -rf src
+	rm -rf vendor generated var/* pub/static/* app/etc/env.php
